@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fruit Quality Report</title>
+  <script>
+    function handleBoxInput() {
+      const boxCount = document.getElementById("boxCount").value;
+      const boxDetails = document.getElementById("boxDetails");
+      boxDetails.innerHTML = "";
+
+      for (let i = 1; i <= boxCount; i++) {
+        boxDetails.innerHTML += `
+          <div>
+            <h4>Box ${i}</h4>
+            <label>Weight:</label>
+            <input name="Weight${i}" type="number" required step="0.01"><br>
+            <label>Pressure:</label>
+            <input name="Pressure${i}" type="number" required step="0.01"><br>
+            <label>Temperature:</label>
+            <input name="Temperature${i}" type="number" required step="0.01"><br>
+          </div>
+        `;
+      }
+    }
+
+    async function handleSubmit(event) {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+
+      // Convert file to base64
+      const file = formData.get("file");
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          formData.set("file", reader.result.split(",")[1]);
+          await submitData(formData);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        await submitData(formData);
+      }
+    }
+
+    async function submitData(formData) {
+      const response = await fetch("https://script.google.com/a/macros/ninjacart.com/s/AKfycbzjGn25VU2hSkICJcDUPEmtmGPhRMSRUYueBK-GeEKKxrI2yiibOq8ztL4JozwJPgE/exec", {
+        method: "POST",
+        body: formData,
+      });
+      const result = await response.json();
+
+      if (result.result === "success") {
+        alert("Data submitted successfully!");
+        window.open(result.reportUrl, "_blank");
+      } else {
+        alert("Error: " + result.error);
+      }
+    }
+  </script>
+</head>
+<body>
+  <h1>Fruit Quality Inspection</h1>
+  <form onsubmit="handleSubmit(event)">
+    <label>Consignment Number:</label>
+    <input name="Consignment Number" type="text" required><br>
+    <label>Number of Boxes:</label>
+    <input id="boxCount" name="Box Count" type="number" required onchange="handleBoxInput()"><br>
+    <div id="boxDetails"></div>
+    <label>Inspector Name:</label>
+    <input name="Inspector Name" type="text" required><br>
+    <label>Date:</label>
+    <input name="Date" type="date" disabled value=""><br>
+    <label>Upload File:</label>
+    <input name="file" type="file" accept="application/pdf"><br>
+    <button type="submit">Submit</button>
+  </form>
+</body>
+</html>
